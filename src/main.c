@@ -22,8 +22,11 @@
 #define STK_LOAD ((volatile unsigned int*) (STK+0x4))
 #define STK_VAL ((volatile unsigned int*) (STK+0x8))
 
+
 #define PERIOD 100
 volatile unsigned char currently_pressed_key = 0xFF; 
+#define SYSTCG_EXTICR1 0x40013800 + 8
+#define SYSTCG_EXTICR3 0x40013800 + 0x10
 
 // I den här funktionen skall lägre byten av Port E förberedas för att lägga
 // ut en signal på pinne 0. Den skall bara kallas en gång. 
@@ -102,28 +105,90 @@ int read_column()
 
     return 0;
 }
+void keyboardHandler(){
+    *((unsigned int*) SYSTCG_EXTICR3) &=0xFFFF;
 
+}
 
-//Den här funktionen skall konfigurera övre byten av Port E och aktivera ALLA rader på keyboarden.
-// Interrupts skall initieras så att en interrupt handler kallas när någon knapp trycks ner. 
-// Interrupthandlern skall uppdatera "currently_pressed_key"
+void kbdActivate( unsigned int row )
+{
+	switch( row )
+	{
+		case 1: *GPIO_E_ODRHigh = 0x10;     break;
+        case 2: *GPIO_E_ODRHigh = 0x20;     break;
+        case 3: *GPIO_E_ODRHigh = 0x40;     break;
+        case 4: *GPIO_E_ODRHigh = 0x80;     break;
+        case 0: *GPIO_E_ODRHigh = 0x00;     break;
+	}
+}
+
+// Läs en rad och returnera vilken kolumn som är ett 
+// (antar endast en tangent nedtryckt)
+int kbdGetCol ( void )
+{
+	unsigned short c;
+	c = *GPIO_E_IDrHigh;
+ 	if ( c & 0x8 )	return 4;
+	if ( c & 0x4 ) 	return 3;
+	if ( c & 0x2 ) 	return 2;
+	if ( c & 0x1 ) 	return 1;
+	return 0;
+}
+
+unsigned char keyb(void) 
+{
+	unsigned char key[] = { '1', '2', '3', 'A',
+							'4', '5', '6', 'B',
+							'7', '8', '9', 'C',
+							'E', '0', 'F', 'D' };
+	for (int row=1; row <=4 ; row++) {
+		kbdActivate(row);
+		delay_250ns();		
+		int col = kbdGetCol();
+		if(col)	{ 
+			return key [4*(row-1)+(col-1)];
+		}
+	}
+	*GPIO_E_ODRHigh = 0;
+	return 0xFF;
+}
+
 void InitKeyboard(){
-
-    /* Konfigurera pinnar 8-15 som ingångar: rensa motsvarande MODER-bitar */
-    *GPIO_E_MODER &= 0x0000FFFF;
-
-
-    // *(volatile ulong*)0x40023830 = 0x18;
-    // *(volatile uint*)0x40020C08 = 0x55555555;
-
-    // *(volatile ushort*) GPIO_E_MODER_LOW  = 0x5555;
-    // *(volatile ushort*) GPIO_E_MODER_HIGH = 0x5500;
-    // *(volatile ushort*) GPIO_E_Otyper    &= 0x00FF;
-    // *(volatile uint*)   GPIO_E_Pupdr     &= 0x0000FFFF;
-    // *(volatile uint*)   GPIO_E_Pupdr     |= 0x00AA0000;
-    // printf(read_column());
+   // från labb 2 här
     
+    // b15-b12 used for output to rows
+	// b11-b8  used for input from columns
+	*GPIO_E_MODER = 0x55005555;	
+    // Pinnarna som läses från tangentbordet är spänningssatta om
+	// nedtryckta och flytande annars, så behöver Pull Down
+	*GPIO_E_Pupdr = 0x00AA0000;		
+	// Pinnarna som väljer rad skall vara spänningssatta (Push/Pull)
+    *GPIO_E_Otyper= 0x00000000;	 
 
+
+    *GPIO_E_Ospeedr = 0x00000000;
+	*GPIO_E_ODRLow = 0;
+	*GPIO_E_ODRHigh = 0;
+
+    int c; 
+			do { 
+				c = keyb(); 
+			} while(c == 0xFF);
+    
+    
+    //vecktor shit här 
+
+    *((unsigned int*) SYSTCG_EXTICR3) &=0xFFFF; // nollställa 
+    *((unsigned int*) SYSTCG_EXTICR3) |=0x4444; // 0100 to EXTI 8-9
+
+   // 
+   *((unsigned int*) 0x40013C00) |=8;
+   *((unsigned int*) 0x40013C0C) |=8;
+   *((unsigned int*) 0x40013C0C) &= ~8;
+
+
+
+    
 }
 
 

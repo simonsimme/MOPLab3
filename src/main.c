@@ -32,6 +32,7 @@ volatile unsigned char currently_pressed_key = 0xFF;
 
 #define NVIC_ISER0 0xE000E100
 #define NVIC_ISER1 0xE000E100 + 0x004
+#define SCB_vector  0x2001C000
 
 // I den här funktionen skall lägre byten av Port E förberedas för att lägga
 // ut en signal på pinne 0. Den skall bara kallas en gång. 
@@ -176,7 +177,8 @@ void appInit(){
    *((unsigned int*) 0x40013C0C) &= ~0xF00;
 
    //avbrottvekotr 
-   *((void(**) (void)) avbrottsvektor) = irq_handler();
+   *((void(**) (void)) (SCB_vector + 0x9C )) = irq_handler();
+   *((void(**) (void)) (SCB_vector + 0xE0 )) = irq_handler();
 
 
 }

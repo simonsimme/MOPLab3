@@ -27,6 +27,11 @@
 volatile unsigned char currently_pressed_key = 0xFF; 
 #define SYSTCG_EXTICR1 0x40013800 + 8
 #define SYSTCG_EXTICR3 0x40013800 + 0x10
+#define EXTI9_5 0x0000009C
+#define EXTI15_10 0x000000E0
+
+#define NVIC_ISER0 0xE000E100
+#define NVIC_ISER1 0xE000E100 + 0x004
 
 // I den här funktionen skall lägre byten av Port E förberedas för att lägga
 // ut en signal på pinne 0. Den skall bara kallas en gång. 
@@ -105,10 +110,7 @@ int read_column()
 
     return 0;
 }
-void keyboardHandler(){
-    *((unsigned int*) SYSTCG_EXTICR3) &=0xFFFF;
 
-}
 
 void kbdActivate( unsigned int row )
 {
@@ -152,6 +154,32 @@ unsigned char keyb(void)
 	*GPIO_E_ODRHigh = 0;
 	return 0xFF;
 }
+void irq_handler(void){
+    // PR EDTI3
+   *((unsigned int*) 0x40013c14) |= 0xF00;
+   
+
+}
+void appInit(){
+    //vecktor shit här 
+    //NVIC
+    *((unsigned int*) NVIC_ISER0) &= (1<<23);
+    *((unsigned int*) NVIC_ISER1) &= (1<<8);
+
+
+    *((unsigned int*) SYSTCG_EXTICR3) &=0xFFFF; // nollställa 
+    *((unsigned int*) SYSTCG_EXTICR3) |=0x4444; // 0100 to EXTI 8-11
+
+   
+   *((unsigned int*) 0x40013C00) |= 0xF00;
+   *((unsigned int*) 0x40013C0C) |=0xF00;
+   *((unsigned int*) 0x40013C0C) &= ~0xF00;
+
+   //avbrottvekotr 
+   *((void(**) (void)) avbrottsvektor) = irq_handler();
+
+
+}
 
 void InitKeyboard(){
    // från labb 2 här
@@ -170,25 +198,12 @@ void InitKeyboard(){
 	*GPIO_E_ODRLow = 0;
 	*GPIO_E_ODRHigh = 0;
 
-    int c; 
-			do { 
-				c = keyb(); 
-			} while(c == 0xFF);
-    
-    
-    //vecktor shit här 
+    // int c; 
+	// 		do { 
+	// 			c = keyb(); 
+	// 		} while(c == 0xFF);
 
-    *((unsigned int*) SYSTCG_EXTICR3) &=0xFFFF; // nollställa 
-    *((unsigned int*) SYSTCG_EXTICR3) |=0x4444; // 0100 to EXTI 8-9
-
-   // 
-   *((unsigned int*) 0x40013C00) |=8;
-   *((unsigned int*) 0x40013C0C) |=8;
-   *((unsigned int*) 0x40013C0C) &= ~8;
-
-
-
-    
+    appInit();
 }
 
 

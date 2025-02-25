@@ -156,10 +156,10 @@ unsigned char keyb(void)
 	return 0xFF;
 }
 void irq_handler(void){
-    // PR EDTI3
+    // PR EDTI3 reset the value 
    *((unsigned int*) 0x40013c14) |= 0xF00;
    
-
+   currently_pressed_key = keyb();
 }
 void appInit(){
     //vecktor shit här 
@@ -179,7 +179,6 @@ void appInit(){
    //avbrottvekotr 
    *((void(**) (void)) (SCB_vector + 0x9C )) = irq_handler();
    *((void(**) (void)) (SCB_vector + 0xE0 )) = irq_handler();
-
 
 }
 

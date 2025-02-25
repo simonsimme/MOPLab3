@@ -45,6 +45,16 @@ void InitSquareWave()
     
 }
 
+void delay_250ns(void){
+    *STK_CTRL = 0;
+    *STK_LOAD = 0x00000029; // 42Hz = 250ns, 42 (dec) = 29 (hex)
+    *STK_VAL = 0;
+    *STK_CTRL = 5;
+
+    while((*STK_CTRL & 0x00010000)== 0);
+    *STK_CTRL = 0;
+}
+
 // När man kallat den här funktionen skall en fyrkantsvåg med given period 
 // (i mikrosekunder) läggas ut på pinne 0, Port E. Perioden skall kunna 
 // vara upp till 99000 mikrosekunder.
@@ -82,16 +92,6 @@ void StopSquareWave()
 }
 
 
-void delay_250ns(void){
-    *STK_CTRL = 0;
-    *STK_LOAD = 0x00000029; // 42Hz = 250ns, 42 (dec) = 29 (hex)
-    *STK_VAL = 0;
-    *STK_CTRL = 5;
-
-    while((*STK_CTRL & 0x00010000)== 0);
-    *STK_CTRL = 0;
-
-}
 int read_column()
 {
     
@@ -157,9 +157,11 @@ unsigned char keyb(void)
 }
 void irq_handler(void){
     // PR EDTI3 reset the value 
+    currently_pressed_key = keyb();
+
    *((unsigned int*) 0x40013c14) |= 0xF00;
    
-   currently_pressed_key = keyb();
+   // currently_pressed_key = keyb();
 }
 void appInit(){
     //vecktor shit här 
@@ -177,8 +179,8 @@ void appInit(){
    *((unsigned int*) 0x40013C0C) &= ~0xF00;
 
    //avbrottvekotr 
-   *((void(**) (void)) (SCB_vector + 0x9C )) = irq_handler();
-   *((void(**) (void)) (SCB_vector + 0xE0 )) = irq_handler();
+   *((void(**) (void)) (SCB_vector + 0x9C )) = irq_handler;
+   *((void(**) (void)) (SCB_vector + 0xE0 )) = irq_handler;
 
 }
 

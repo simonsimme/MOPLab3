@@ -166,8 +166,8 @@ void irq_handler(void){
 void appInit(){
     //vecktor shit här 
     //NVIC
-    *((unsigned int*) NVIC_ISER0) &= (1<<23);
-    *((unsigned int*) NVIC_ISER1) &= (1<<8);
+    *((unsigned int*) NVIC_ISER0) |= (1<<23); // i change it from &=
+    *((unsigned int*) NVIC_ISER1) |= (1<<8);
 
 
     *((unsigned int*) SYSTCG_EXTICR3) &=0xFFFF; // nollställa 

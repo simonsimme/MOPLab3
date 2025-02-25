@@ -468,21 +468,21 @@ void appInit(){
 2000029e:	af00      	add	r7, sp, #0
     //vecktor shit här 
     //NVIC
-    *((unsigned int*) NVIC_ISER0) &= (1<<23);
+    *((unsigned int*) NVIC_ISER0) |= (1<<23); // &=
 200002a0:	4b1b      	ldr	r3, [pc, #108]	@ (20000310 <appInit+0x74>)
-200002a2:	6819      	ldr	r1, [r3, #0]
+200002a2:	681a      	ldr	r2, [r3, #0]
 200002a4:	4b1a      	ldr	r3, [pc, #104]	@ (20000310 <appInit+0x74>)
-200002a6:	2280      	movs	r2, #128	@ 0x80
-200002a8:	0412      	lsls	r2, r2, #16
-200002aa:	400a      	ands	r2, r1
+200002a6:	2180      	movs	r1, #128	@ 0x80
+200002a8:	0409      	lsls	r1, r1, #16
+200002aa:	430a      	orrs	r2, r1
 200002ac:	601a      	str	r2, [r3, #0]
-    *((unsigned int*) NVIC_ISER1) &= (1<<8);
+    *((unsigned int*) NVIC_ISER1) |= (1<<8);
 200002ae:	4b19      	ldr	r3, [pc, #100]	@ (20000314 <appInit+0x78>)
-200002b0:	6819      	ldr	r1, [r3, #0]
+200002b0:	681a      	ldr	r2, [r3, #0]
 200002b2:	4b18      	ldr	r3, [pc, #96]	@ (20000314 <appInit+0x78>)
-200002b4:	2280      	movs	r2, #128	@ 0x80
-200002b6:	0052      	lsls	r2, r2, #1
-200002b8:	400a      	ands	r2, r1
+200002b4:	2180      	movs	r1, #128	@ 0x80
+200002b6:	0049      	lsls	r1, r1, #1
+200002b8:	430a      	orrs	r2, r1
 200002ba:	601a      	str	r2, [r3, #0]
 
 

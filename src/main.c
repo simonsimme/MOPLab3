@@ -181,7 +181,6 @@ void SysTickHandler() {
     *GPIO_E_ODRLow ^= (1<<0);   // Växla PE0 (flip bit 0)
 }
 void StartSquareWave(unsigned int period_in_us){
-    *SCB_VTOR = 0x2001C000;    // Relokera vektortabellen
     *((void (**)(void))(0x2001C000 + 0x3C)) = &SysTickHandler;
     *((void (**)(void))(0x2001C000 + 0x64)) = &EXTI3_IRQHandler;
     *STK_CTRL = 0;            // Stäng av SysTick under konfigurering

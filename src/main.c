@@ -168,21 +168,27 @@ unsigned char keyb()
     return 0xFF;
 }
 
-void EXTI3_IRQHandler(void){
+
+void irq_handler(void)
+{
+    // PR EDTI3 reset the value
+
     *EXTI_IMR &= ~0xF;
     currently_pressed_key = keyb();
 
-    *GPIO_E_ODRHigh = 0xF0;
+    *GPIO_E_IDrHigh = 0xF0;
 
     *EXTI_PR |= 0xF;
     *EXTI_IMR |= 0xF;
+
+    // currently_pressed_key = keyb();
 }
 void SysTickHandler() {
     *GPIO_E_ODRLow ^= (1<<0);   // Växla PE0 (flip bit 0)
 }
 void StartSquareWave(unsigned int period_in_us){
     *((void (**)(void))(0x2001C000 + 0x3C)) = &SysTickHandler;
-    *((void (**)(void))(0x2001C000 + 0x64)) = &EXTI3_IRQHandler;
+    *((void (**)(void))(0x2001C000 + 0x64)) = &irq_handler;
     *STK_CTRL = 0;            // Stäng av SysTick under konfigurering
     *STK_LOAD =  (168 * period_in_us) - 1; //1ms = 168hz
     *STK_VAL = 0;             // Nollställ räknaren
@@ -196,16 +202,6 @@ void StopSquareWave()
 }
 
 
-void irq_handler(void)
-{
-    // PR EDTI3 reset the value
-
-    currently_pressed_key = keyb();
-
-    *((unsigned int *)0x40013c14) |= 0xF00;
-
-    // currently_pressed_key = keyb();
-}
 void appInit()
 {
     // vecktor shit här
